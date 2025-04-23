@@ -3,20 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Geolocalización Web</title>
+  <title>Mapa con Geolocalización en Tiempo Real</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
     #map {
       height: 100vh;
+      width: 100%;
+    }
+    #loading {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ffffffcc;
+      padding: 10px 20px;
+      border-radius: 8px;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
   </style>
 </head>
-
-<!-- Este es el cuerpo -->
 <body>
+
+  <div id="loading">Obteniendo tu ubicación...</div>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+  <script>
+    // Inicializar el mapa
+    const map = L.map('map').setView([0, 0], 2); // Vista inicial en caso de error
+
+    // Agregar capa base
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 18
+    }).addTo(map);
+
+    // Icono personalizado
+    const customIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854878.png',
+      iconSize: [38, 38],
+      iconAnchor: [19, 38],
+      popupAnchor: [0, -40]
+    });
+
+    // Geolocalización
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        map.setView([lat, lon], 15);
+
+        L.marker([lat, lon], { icon: customIcon })
+          .addTo(map)
+          .bindPopup("📍 Estás aquí")
+          .openPopup();
+
+        document.getElementById('loading').style.display = 'none';
+
+      }, err => {
+        document.getElementById('loading').innerText = "No se pudo obtener la ubicación.";
+      });
+    } else {
+      document.getElementById('loading').innerText = "Tu navegador no soporta geolocalización.";
+    }
+  </script>
 </body>
 </html>
